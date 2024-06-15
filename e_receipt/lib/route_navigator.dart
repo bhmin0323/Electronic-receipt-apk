@@ -5,11 +5,11 @@ class Routes {
   Routes._();
 
   // static const String certifypage = '/';
-  static const String listpage = '/list';
+  static const String info = '/list';
 
   static final routes = <String, WidgetBuilder>{
     // certifypage: (BuildContext context) => Certify_Page(),
-    listpage: (BuildContext context) => qrInfo_Page(
+    info: (BuildContext context) => qrInfo_Page(
           qrData: '',
         ),
   };

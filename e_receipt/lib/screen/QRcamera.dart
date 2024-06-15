@@ -1,3 +1,4 @@
+import 'package:e_receipt/api/api.dart';
 import 'package:e_receipt/route_navigator.dart';
 import 'package:e_receipt/screen/QRInfo.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ class QRpage extends StatefulWidget {
 class _QRpageState extends State<QRpage> {
   final qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
+  // ApiService 인스턴스 생성
+  final ApiService _apiService = ApiService();
 
   @override
   void dispose() {
@@ -62,13 +65,17 @@ class _QRpageState extends State<QRpage> {
       final String qrText = scanData.code!;
       // 스캔 후 QRViewController를 일시 중지
       await controller.pauseCamera();
+      //서버에 QR plain text 요청
+      //int temp = await _apiService.getInfo(qrText);
+
       // QR 스캔 후 qrInfo 페이지로 이동
-      Navigator.push(
-        context,
+      Navigator.of(context, rootNavigator: true)
+          .push(
         MaterialPageRoute(
           builder: (context) => qrInfo_Page(qrData: qrText),
         ),
-      ).then((value) async {
+      )
+          .then((value) async {
         // QRInfo 페이지에서 돌아왔을 때 QRViewController 재개
         await controller.resumeCamera();
       });
