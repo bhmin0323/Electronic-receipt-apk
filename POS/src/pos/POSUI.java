@@ -5,6 +5,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 
@@ -296,32 +297,75 @@ public class POSUI extends JFrame {
         totalLabel.setText(String.format("Total: $%.2f", currentSale.getTotal()));
     }
 
-    private void completeSale() {
-        if (currentSale.getItems().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No items in the current sale!");
-            return;
-        }
-
-        String receipt = generateReceipt();
-        byte[] receiptData = receipt.getBytes();
-        serialComm.sendData(receiptData);
-
-        JOptionPane.showMessageDialog(this, "Sale completed and receipt sent to printer!");
-        currentSale = new Sale();
-        updateSaleTable();
+//    private void completeSale() {
+//        if (currentSale.getItems().isEmpty()) {
+//            JOptionPane.showMessageDialog(this, "No items in the current sale!");
+//            return;
+//        }
+//
+//        String receipt = generateReceipt();
+//        byte[] receiptData = receipt.getBytes();
+//        serialComm.sendData(receiptData);
+//
+//        JOptionPane.showMessageDialog(this, "Sale completed and receipt sent to printer!");
+//        currentSale = new Sale();
+//        updateSaleTable();
+//    }
+//
+//    private String generateReceipt() {
+//        StringBuilder receipt = new StringBuilder();
+//        receipt.append("===== POS Receipt =====\n");
+//        for (Map.Entry<Product, Integer> entry : currentSale.getItems().entrySet()) {
+//            Product product = entry.getKey();
+//            int quantity = entry.getValue();
+//            receipt.append(String.format("%s x%d - $%.2f\n", product.getName(), quantity, product.getPrice() * quantity));
+//        }
+//        receipt.append("----------------------\n");
+//        receipt.append(String.format("Total: $%.2f\n", currentSale.getTotal()));
+//        receipt.append("======================\n");
+//        return receipt.toString();
+//    }
+private void completeSale() {
+    if (currentSale.getItems().isEmpty()) {
+        JOptionPane.showMessageDialog(this, "No items in the current sale!");
+        return;
     }
+
+    String receipt = generateReceipt();
+    byte[] receiptData;
+    try {
+        receiptData = receipt.getBytes("CP949");
+    } catch (UnsupportedEncodingException e) {
+        System.err.println("CP949 encoding not supported: " + e.getMessage());
+        receiptData = receipt.getBytes(); // 기본 인코딩 사용
+    }
+    serialComm.sendData(receiptData);
+
+    JOptionPane.showMessageDialog(this, "Sale completed and receipt sent to printer!");
+    currentSale = new Sale();
+    updateSaleTable();
+}
 
     private String generateReceipt() {
         StringBuilder receipt = new StringBuilder();
-        receipt.append("===== POS Receipt =====\n");
-        for (Map.Entry<Product, Integer> entry : currentSale.getItems().entrySet()) {
-            Product product = entry.getKey();
-            int quantity = entry.getValue();
-            receipt.append(String.format("%s x%d - $%.2f\n", product.getName(), quantity, product.getPrice() * quantity));
-        }
-        receipt.append("----------------------\n");
-        receipt.append(String.format("Total: $%.2f\n", currentSale.getTotal()));
-        receipt.append("======================\n");
+        double total = currentSale.getTotal();
+        double taxRate = 0.1; // 10% 부가세
+        double taxAmount = total * taxRate;
+        double subtotal = total - taxAmount;
+
+        receipt.append("상호: 상도동주민들\n");
+        receipt.append("대표자: 이지민\n");
+        receipt.append("사업자번호: 123-45-67890    TEL: 02-000-0000\n");
+        receipt.append("주소: 서울특별시 동작구 상도로 369\n");
+        receipt.append("---------------------------------------------\n");
+        receipt.append(String.format("거래금액:%33s 원\n", String.format("%,d", Math.round(subtotal))));
+        receipt.append(String.format("부 가 세:%33s 원\n", String.format("%,d", Math.round(taxAmount))));
+        receipt.append(String.format("총 합 계:%33s 원\n", String.format("%,d", Math.round(total))));
+        receipt.append("---------------------------------------------\n");
+        receipt.append("전자서명전표\n");
+        receipt.append("---------------------------------------------\n");
+        receipt.append("찾아주셔서 감사합니다. (고객용)\n");
+
         return receipt.toString();
     }
 
