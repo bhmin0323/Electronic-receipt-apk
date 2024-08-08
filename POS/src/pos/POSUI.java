@@ -19,6 +19,7 @@ public class POSUI extends JFrame {
     private JComboBox<String> rateComboBox;
     private JTable saleTable;
     private JLabel totalLabel;
+    private JLabel connectionStatusLabel;
 
     public POSUI(SettingsManager settingsManager, SerialCommunication serialComm, Inventory inventory) {
         this.settingsManager = settingsManager;
@@ -31,10 +32,18 @@ public class POSUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Sales", createSalesPanel());
-        tabbedPane.addTab("Settings", createSettingsPanel());
+        tabbedPane.addTab("상품", createSalesPanel());
+        tabbedPane.addTab("설정", createSettingsPanel());
 
         add(tabbedPane);
+
+        SwingUtilities.invokeLater(() -> {
+            if (!serialComm.connect()) {
+                JOptionPane.showMessageDialog(this, "연결할 수 없습니다.", "연결 실패", JOptionPane.WARNING_MESSAGE);
+            }
+            updateConnectionStatus();
+        });
+
     }
 
     private JPanel createSalesPanel() {
@@ -68,7 +77,7 @@ public class POSUI extends JFrame {
         JScrollPane productScrollPane = new JScrollPane(productListPanel);
 
         // 판매 테이블
-        saleTable = new JTable(new DefaultTableModel(new Object[]{"Product", "Price", "Quantity", "Subtotal"}, 0));
+        saleTable = new JTable(new DefaultTableModel(new Object[]{"상품", "가격", "수량", "합계"}, 0));
         JScrollPane saleScrollPane = new JScrollPane(saleTable);
 
         // 스플릿 패널
@@ -76,8 +85,8 @@ public class POSUI extends JFrame {
         splitPane.setResizeWeight(0.9); // 제품 목록 30%, 판매 테이블 70%
         splitPane.setDividerLocation(1100); // 초기 분할 위치 (조정 가능)
 
-        totalLabel = new JLabel("Total: $0.00");
-        JButton completeButton = new JButton("Complete Sale");
+        totalLabel = new JLabel("총 합계: ₩0.00");
+        JButton completeButton = new JButton("계산서 출력");
         completeButton.addActionListener(e -> completeSale());
 
         JPanel bottomPanel = new JPanel(new FlowLayout());
@@ -95,7 +104,7 @@ public class POSUI extends JFrame {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
-        gbc.insets = new Insets(1, 50, 1, 50); // 여백 설정
+        gbc.insets = new Insets(5, 5, 5, 5); // 여백 설정 조정
 
         // 포트 라벨과 콤보박스
         gbc.gridx = 0;
@@ -107,9 +116,9 @@ public class POSUI extends JFrame {
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 0.7;
-        portComboBox = new JComboBox<>(new String[]{"COM1", "COM2", "COM3", "COM4"});
+        portComboBox = new JComboBox<>(new String[]{"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9"});
         portComboBox.setSelectedItem(settingsManager.getPort());
-        portComboBox.setPreferredSize(new Dimension(100, 50)); // 크기 설정
+        portComboBox.setPreferredSize(new Dimension(100, 25));
         panel.add(portComboBox, gbc);
 
         // 전송 속도 라벨과 콤보박스
@@ -124,30 +133,57 @@ public class POSUI extends JFrame {
         gbc.weightx = 0.7;
         rateComboBox = new JComboBox<>(new String[]{"9600", "115200"});
         rateComboBox.setSelectedItem(String.valueOf(settingsManager.getRate()));
-        rateComboBox.setPreferredSize(new Dimension(100, 50)); // 크기 설정
+        rateComboBox.setPreferredSize(new Dimension(100, 25));
         panel.add(rateComboBox, gbc);
 
-        // 버튼들
+        // 설정 저장 버튼
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0.5;
-        JButton saveButton = new JButton("설정 저장");
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JButton saveButton = new JButton("설정 적용");
         saveButton.addActionListener(e -> saveSettings());
         panel.add(saveButton, gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0.5;
-        JButton connectButton = new JButton("연결");
-        connectButton.addActionListener(e -> serialComm.connect());
-        panel.add(connectButton, gbc);
+        // 연결 상태 표시 레이블
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        connectionStatusLabel = new JLabel("연결 상태: 확인 중...");
+        panel.add(connectionStatusLabel, gbc);
 
-        // 전체 패널의 선호 크기 설정
-        panel.setPreferredSize(new Dimension(100, 50));
+        // 연결 버튼과 연결 해제 버튼을 포함할 패널
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0)); // 간격을 10으로 조정
+        JButton connectButton = new JButton("연결");
+        connectButton.addActionListener(e -> {
+            if (serialComm.connect()) {
+                JOptionPane.showMessageDialog(this, "연결되었습니다.");
+            } else {
+                JOptionPane.showMessageDialog(this, "연결에 실패했습니다.", "연결 실패", JOptionPane.WARNING_MESSAGE);
+            }
+            updateConnectionStatus();
+        });
+        JButton disconnectButton = new JButton("연결 해제");
+        disconnectButton.addActionListener(e -> {
+            serialComm.disconnect();
+            updateConnectionStatus();
+            JOptionPane.showMessageDialog(this, "연결이 해제되었습니다.");
+        });
+        buttonPanel.add(connectButton);
+        buttonPanel.add(disconnectButton);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        panel.add(buttonPanel, gbc);
 
         return panel;
+    }
+
+    private void updateConnectionStatus() {
+        boolean isConnected = serialComm.isConnected();
+        connectionStatusLabel.setText("연결 상태: " + (isConnected ? "연결됨" : "연결 안됨"));
     }
 
 
@@ -176,28 +212,28 @@ public class POSUI extends JFrame {
 //    }
 
     private void showProductDialog(String productName) {
-        JDialog dialog = new JDialog(this, "Select Quantity", true);
+        JDialog dialog = new JDialog(this, "수량 선택", true);
         dialog.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10); // 여백 설정
 
         Product product = inventory.getProduct(productName);
-        if (product == null) {
-            JOptionPane.showMessageDialog(this, "Product not found!");
-            return;
-        }
+//        if (product == null) {
+//            JOptionPane.showMessageDialog(this, "Product not found!");
+//            return;
+//        }
 
         // 제품 이름 레이블
         JLabel productLabel = new JLabel(productName);
-        productLabel.setFont(new Font("Arial", Font.BOLD, 16)); // 폰트 크기 및 스타일 조정
+        productLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16)); // 폰트 크기 및 스타일 조정
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2; // 두 열을 차지하게 설정
         dialog.add(productLabel, gbc);
 
         // 개수 조절 레이블
-        JLabel quantityLabel = new JLabel("Quantity:");
-        quantityLabel.setFont(new Font("Arial", Font.PLAIN, 14)); // 폰트 크기 조정
+        JLabel quantityLabel = new JLabel("수량:");
+        quantityLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1; // 한 열만 차지하게 설정
@@ -218,9 +254,9 @@ public class POSUI extends JFrame {
         dialog.add(quantitySpinner, gbc);
 
         // 추가 버튼
-        JButton addButton = new JButton("Add to Sale");
+        JButton addButton = new JButton("상품 추가");
         addButton.setPreferredSize(new Dimension(150, 40)); // 버튼 크기 조정
-        addButton.setFont(new Font("Arial", Font.PLAIN, 14)); // 폰트 크기 조정
+        addButton.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
         addButton.addActionListener(e -> {
             int quantity = (Integer) quantitySpinner.getValue();
             if (product.getQuantity() >= quantity) {
@@ -229,7 +265,7 @@ public class POSUI extends JFrame {
                 updateSaleTable();
                 dialog.dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Insufficient stock!");
+                JOptionPane.showMessageDialog(this, "수량이 너무 많습니다.");
             }
         });
 
@@ -291,10 +327,10 @@ public class POSUI extends JFrame {
             Product product = entry.getKey();
             int quantity = entry.getValue();
             double subtotal = product.getPrice() * quantity;
-            model.addRow(new Object[]{product.getName(), product.getPrice(), quantity, String.format("$%.2f", subtotal)});
+            model.addRow(new Object[]{product.getName(), product.getPrice(), quantity, String.format("₩%.2f", subtotal)});
         }
 
-        totalLabel.setText(String.format("Total: $%.2f", currentSale.getTotal()));
+        totalLabel.setText(String.format("총 합계: ₩%.2f", currentSale.getTotal()));
     }
 
 //    private void completeSale() {
@@ -327,7 +363,7 @@ public class POSUI extends JFrame {
 //    }
 private void completeSale() {
     if (currentSale.getItems().isEmpty()) {
-        JOptionPane.showMessageDialog(this, "No items in the current sale!");
+        JOptionPane.showMessageDialog(this, "저장된 목록이 없습니다.");
         return;
     }
 
@@ -341,7 +377,7 @@ private void completeSale() {
     }
     serialComm.sendData(receiptData);
 
-    JOptionPane.showMessageDialog(this, "Sale completed and receipt sent to printer!");
+    JOptionPane.showMessageDialog(this, "완료되었습니다");
     currentSale = new Sale();
     updateSaleTable();
 }
@@ -376,7 +412,7 @@ private void completeSale() {
         settingsManager.setPort(selectedPort);
         settingsManager.setRate(selectedRate);
 
-        JOptionPane.showMessageDialog(this, "Settings saved successfully!");
+        JOptionPane.showMessageDialog(this, "설정이 저장되었습니다.");
     }
 
 

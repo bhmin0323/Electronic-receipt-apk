@@ -23,7 +23,7 @@ public class SettingsManager {
     }
 
     private void setDefaultSettings() {
-        properties.setProperty("port", "COM1");
+        properties.setProperty("port", "COM2");
         properties.setProperty("rate", "115200");
         saveSettings();
     }
@@ -37,7 +37,7 @@ public class SettingsManager {
     }
 
     public String getPort() {
-        return properties.getProperty("port", "COM1");
+        return properties.getProperty("port", "COM2");
     }
 
     public int getRate() {
@@ -45,8 +45,12 @@ public class SettingsManager {
     }
 
     public void setPort(String port) {
-        properties.setProperty("port", port);
-        saveSettings();
+        if (port.matches("COM[1-9]")) {
+            properties.setProperty("port", port);
+            saveSettings();
+        } else {
+            throw new IllegalArgumentException("Invalid port. Must be COM2 to COM9.");
+        }
     }
 
     public void setRate(int rate) {

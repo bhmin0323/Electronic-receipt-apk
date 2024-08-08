@@ -17,6 +17,11 @@ public class SerialCommunication {
             String portName = settingsManager.getPort();
             int baudRate = settingsManager.getRate();
 
+            if (!portName.matches("COM[1-9]")) {
+                System.err.println("Invalid port. Must be COM2 to COM9.");
+                return false;
+            }
+
             serialPort = SerialPort.getCommPort(portName);
             serialPort.setBaudRate(baudRate);
 
@@ -36,6 +41,17 @@ public class SerialCommunication {
         } catch (Exception e) {
             System.err.println("Error connecting to serial port: " + e.getMessage());
             return false;
+        }
+    }
+
+    public boolean isConnected() {
+        return serialPort != null && serialPort.isOpen();
+    }
+
+    public void disconnect() {
+        if (serialPort != null && serialPort.isOpen()) {
+            serialPort.closePort();
+            System.out.println("Disconnected from serial port");
         }
     }
 
