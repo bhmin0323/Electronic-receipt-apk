@@ -394,6 +394,20 @@ private void completeSale() {
         receipt.append("사업자번호: 123-45-67890    TEL: 02-000-0000\n");
         receipt.append("주소: 서울특별시 동작구 상도로 369\n");
         receipt.append("---------------------------------------------\n");
+
+        // 각 상품의 정보 추가
+        for (Map.Entry<Product, Integer> entry : currentSale.getItems().entrySet()) {
+            Product product = entry.getKey();
+            int quantity = entry.getValue();
+            double itemTotal = product.getPrice() * quantity;
+            receipt.append(String.format("%-20s %3d개 %10s원\n",
+                    product.getName(),
+                    quantity,
+                    String.format("%,d", Math.round(itemTotal))
+            ));
+        }
+
+        receipt.append("---------------------------------------------\n");
         receipt.append(String.format("거래금액:%33s 원\n", String.format("%,d", Math.round(subtotal))));
         receipt.append(String.format("부 가 세:%33s 원\n", String.format("%,d", Math.round(taxAmount))));
         receipt.append(String.format("총 합 계:%33s 원\n", String.format("%,d", Math.round(total))));
