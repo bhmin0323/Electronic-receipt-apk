@@ -11,15 +11,15 @@ public class Inventory {
     public Inventory() {
         products = new HashMap<>();
         // 샘플 상품 추가
-        addProduct(new Product("사과", 1.0, 999));
-        addProduct(new Product("바나나", 0.5, 999));
-        addProduct(new Product("오렌지", 0.75, 999));
-        addProduct(new Product("a", 11.0, 999));
-        addProduct(new Product("b", 0.35, 999));
-        addProduct(new Product("c", 0.7, 999));
-        addProduct(new Product("d", 1.5, 999));
-        addProduct(new Product("e", 2.5, 999));
-        addProduct(new Product("f", 1.75, 999));
+        addProduct(new Product("사과", 1000, 999));
+        addProduct(new Product("바나나", 2000, 999));
+        addProduct(new Product("오렌지", 3000, 999));
+        addProduct(new Product("딸기", 4000, 999));
+        addProduct(new Product("포도", 5000, 999));
+        addProduct(new Product("수박", 6000, 999));
+        addProduct(new Product("참외", 7000, 999));
+        addProduct(new Product("메론", 8000, 999));
+        addProduct(new Product("당근", 9000, 999));
     }
 
     public void addProduct(Product product) {

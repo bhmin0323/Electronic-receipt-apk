@@ -368,7 +368,7 @@ private void completeSale() {
         JOptionPane.showMessageDialog(this, "저장된 목록이 없습니다.");
         return;
     }
-
+    serialComm.clearBuffer();
     String receipt = generateReceipt();
     byte[] receiptData;
     try {
@@ -378,8 +378,15 @@ private void completeSale() {
         receiptData = receipt.getBytes(); // 기본 인코딩 사용
     }
     serialComm.sendData(receiptData);
+    try {
+        Thread.sleep(2000); // 2000ms = 2초
+    } catch (InterruptedException e) {
+        System.err.println("Thread sleep interrupted: " + e.getMessage());
+    }
+    serialComm.sendCutCommand();
 
     JOptionPane.showMessageDialog(this, "완료되었습니다");
+
     currentSale = new Sale();
     updateSaleTable();
 }
@@ -393,9 +400,9 @@ private void completeSale() {
 
         receipt.append("상호: 상도동주민들\n");
         receipt.append("대표자: 이지민\n");
-        receipt.append("사업자번호: 123-45-67890    TEL: 02-000-0000\n");
+        receipt.append("사업자번호: 123-45-67890  TEL: 02-820-0114\n");
         receipt.append("주소: 서울특별시 동작구 상도로 369\n");
-        receipt.append("---------------------------------------------\n");
+        receipt.append("------------------------------------------\n");
 
         // 각 상품의 정보 추가
         for (Map.Entry<Product, Integer> entry : currentSale.getItems().entrySet()) {
@@ -409,14 +416,21 @@ private void completeSale() {
             ));
         }
 
-        receipt.append("---------------------------------------------\n");
-        receipt.append(String.format("거래금액:%33s 원\n", String.format("%,d", Math.round(subtotal))));
-        receipt.append(String.format("부 가 세:%33s 원\n", String.format("%,d", Math.round(taxAmount))));
-        receipt.append(String.format("총 합 계:%33s 원\n", String.format("%,d", Math.round(total))));
-        receipt.append("---------------------------------------------\n");
+        receipt.append("------------------------------------------\n");
+        receipt.append(String.format("거래금액:%31s원\n", String.format("%,d", Math.round(subtotal))));
+        receipt.append(String.format("부 가 세:%31s원\n", String.format("%,d", Math.round(taxAmount))));
+        receipt.append(String.format("총 합 계:%31s원\n", String.format("%,d", Math.round(total))));
+        receipt.append("------------------------------------------\n");
         receipt.append("전자서명전표\n");
-        receipt.append("---------------------------------------------\n");
+        receipt.append("------------------------------------------\n");
         receipt.append("찾아주셔서 감사합니다. (고객용)\n");
+        receipt.append("\n");
+        receipt.append("\n");
+        receipt.append("\n");
+        receipt.append("\n");
+        receipt.append("\n");
+        receipt.append("\n");
+
 
         return receipt.toString();
     }

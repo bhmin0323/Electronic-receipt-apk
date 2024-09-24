@@ -88,4 +88,19 @@ public class SerialCommunication {
         }
         return new byte[0];
     }
+
+    public void sendCutCommand() {
+        byte[] cutCommand = {0x1d, 'V', 1};  // ESC/POS 절단 명령어
+        sendData(cutCommand);
+    }
+
+    public void clearBuffer() {
+        if (serialPort != null && serialPort.isOpen()) {
+            serialPort.flushIOBuffers();
+            System.out.println("Buffers cleared.");
+        } else {
+            System.err.println("Serial port is not open. Cannot clear buffers.");
+        }
+    }
+
 }
