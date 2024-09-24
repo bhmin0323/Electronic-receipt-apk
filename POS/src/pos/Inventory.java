@@ -11,9 +11,9 @@ public class Inventory {
     public Inventory() {
         products = new HashMap<>();
         // 샘플 상품 추가
-        addProduct(new Product("Apple", 1.0, 999));
-        addProduct(new Product("Banana", 0.5, 999));
-        addProduct(new Product("Orange", 0.75, 999));
+        addProduct(new Product("사과", 1.0, 999));
+        addProduct(new Product("바나나", 0.5, 999));
+        addProduct(new Product("오렌지", 0.75, 999));
         addProduct(new Product("a", 11.0, 999));
         addProduct(new Product("b", 0.35, 999));
         addProduct(new Product("c", 0.7, 999));

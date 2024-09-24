@@ -159,6 +159,8 @@ public class POSUI extends JFrame {
         connectButton.addActionListener(e -> {
             if (serialComm.connect()) {
                 JOptionPane.showMessageDialog(this, "연결되었습니다.");
+            } else if(serialComm.isConnected()) {
+                JOptionPane.showMessageDialog(this, "이미 연결되어있습니다.");
             } else {
                 JOptionPane.showMessageDialog(this, "연결에 실패했습니다.", "연결 실패", JOptionPane.WARNING_MESSAGE);
             }
