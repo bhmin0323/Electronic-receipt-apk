@@ -29,7 +29,7 @@ public class POSUI extends JFrame {
         this.currentSale = new Sale();
 
         setTitle("POS System");
-        setSize(1500, 1000);
+        setSize(1500, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -63,8 +63,13 @@ public class POSUI extends JFrame {
 
         for (String productName : productNames) {
             JButton productButton = new JButton(productName);
-            productButton.addActionListener(e -> showProductDialog(productName));
-            productListPanel.add(productButton);
+
+
+
+            // 버튼을 클릭하면 수량 증가 및 테이블에 반영
+            productButton.addActionListener(e ->showProductDialog(productName) );
+
+            productListPanel.add(productButton); // 상품 목록 패널에 버튼 추가
         }
 
         // 빈 공간을 채우기 위해 빈 JLabel 추가
@@ -86,19 +91,30 @@ public class POSUI extends JFrame {
         splitPane.setResizeWeight(0.9); // 제품 목록 30%, 판매 테이블 70%
         splitPane.setDividerLocation(1100); // 초기 분할 위치 (조정 가능)
 
-        totalLabel = new JLabel("총 합계: ₩0.00");
+        // 총 합계 레이블 및 계산서 출력 버튼
+        totalLabel = new JLabel("총 합계: 0원");
+        totalLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24)); // 폰트 크기 키우기
+
         JButton completeButton = new JButton("계산서 출력");
+        completeButton.setPreferredSize(new Dimension(200, 50)); // 버튼 크기 설정
+        completeButton.setFont(new Font("맑은 고딕", Font.PLAIN, 16)); // 버튼 폰트 크기 설정
         completeButton.addActionListener(e -> completeSale());
 
-        JPanel bottomPanel = new JPanel(new FlowLayout());
-        bottomPanel.add(totalLabel);
-        bottomPanel.add(completeButton);
+        // 하단 패널 설정: 우측 정렬로 배치
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼을 우측 정렬
+
+        buttonPanel.add(totalLabel);
+        buttonPanel.add(completeButton);
+
+        bottomPanel.add(buttonPanel, BorderLayout.EAST); // 우측 정렬로 배치
 
         panel.add(splitPane, BorderLayout.CENTER);
-        panel.add(bottomPanel, BorderLayout.SOUTH);
+        panel.add(bottomPanel, BorderLayout.SOUTH); // 하단에 배치
 
         return panel;
     }
+
 
 
     private JPanel createSettingsPanel() {
@@ -190,116 +206,88 @@ public class POSUI extends JFrame {
     }
 
 
-//    private JPanel createSettingsPanel() {
-//        JPanel panel = new JPanel(new GridLayout(3, 2));
-//
-//        panel.add(new JLabel("Port:"));
-//        portComboBox = new JComboBox<>(new String[]{"COM1", "COM2", "COM3", "COM4"});
-//        portComboBox.setSelectedItem(settingsManager.getPort());
-//        panel.add(portComboBox);
-//
-//        panel.add(new JLabel("Baud Rate:"));
-//        rateComboBox = new JComboBox<>(new String[]{"9600", "115200"});
-//        rateComboBox.setSelectedItem(String.valueOf(settingsManager.getRate()));
-//        panel.add(rateComboBox);
-//
-//        JButton saveButton = new JButton("Save Settings");
-//        saveButton.addActionListener(e -> saveSettings());
-//        panel.add(saveButton);
-//
-//        JButton connectButton = new JButton("Connect");
-//        connectButton.addActionListener(e -> serialComm.connect());
-//        panel.add(connectButton);
-//
-//        return panel;
-//    }
 
     private void showProductDialog(String productName) {
-        JDialog dialog = new JDialog(this, "수량 선택", true);
-        dialog.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10); // 여백 설정
+        // 각 상품에 대한 초기 수량을 설정하는 배열
+        final int[] quantity = {1};
+        Product product = inventory.getProduct(productName); // 해당 상품 객체 가져오기
+        double price = product.getPrice(); // 상품 가격
+        DefaultTableModel model = (DefaultTableModel) saleTable.getModel();
 
-        Product product = inventory.getProduct(productName);
-//        if (product == null) {
-//            JOptionPane.showMessageDialog(this, "Product not found!");
-//            return;
-//        }
-
-        // 제품 이름 레이블
-        JLabel productLabel = new JLabel(productName);
-        productLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16)); // 폰트 크기 및 스타일 조정
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2; // 두 열을 차지하게 설정
-        dialog.add(productLabel, gbc);
-
-        // 개수 조절 레이블
-        JLabel quantityLabel = new JLabel("수량:");
-        quantityLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1; // 한 열만 차지하게 설정
-        dialog.add(quantityLabel, gbc);
-
-        // 개수 조절 스피너
-        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 300, 1);
-        JSpinner quantitySpinner = new JSpinner(spinnerModel);
-
-        // JSpinner의 기본 에디터 크기 조정
-        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor) quantitySpinner.getEditor();
-        editor.getTextField().setFont(new Font("Arial", Font.PLAIN, 20)); // 폰트 크기 조정
-        editor.getTextField().setPreferredSize(new Dimension(120, 40)); // 스피너 텍스트 필드 크기 조정
-        quantitySpinner.setPreferredSize(new Dimension(200, 60)); // 스피너 전체 크기 조정
-
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        dialog.add(quantitySpinner, gbc);
-
-        // 추가 버튼
-        JButton addButton = new JButton("상품 추가");
-        addButton.setPreferredSize(new Dimension(150, 40)); // 버튼 크기 조정
-        addButton.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
-        addButton.addActionListener(e -> {
-            int quantity = (Integer) quantitySpinner.getValue();
-            if (product.getQuantity() >= quantity) {
-                currentSale.addItem(product, quantity);
-                inventory.updateQuantity(productName, quantity);
+        // 테이블에서 이미 해당 상품이 있는지 확인
+        boolean productExists = false;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            if (model.getValueAt(i, 0).equals(productName)) {
+                // 해당 상품이 있으면 수량을 증가시키고 소계를 업데이트
+                int currentQuantity = (int) model.getValueAt(i, 2);
+                currentQuantity++;
+                double subtotal = price * currentQuantity;
+                model.setValueAt(currentQuantity, i, 2); // 수량 업데이트
+                model.setValueAt(String.format("₩%.0f", subtotal), i, 3); // 소계 업데이트
+                productExists = true;
+                currentSale.addItem(product, 1);
+                inventory.updateQuantity(productName, 1);
                 updateSaleTable();
-                dialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "수량이 너무 많습니다.");
+                break;
             }
-        });
+        }
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2; // 두 열을 차지하게 설정
-        dialog.add(addButton, gbc);
+        // 해당 상품이 테이블에 없으면 새 행 추가
+        if (!productExists) {
+            double subtotal = price * quantity[0]; // 소계 계산
+            model.addRow(new Object[]{product.getName(), price, quantity[0], String.format("₩%.0f", subtotal)});
+            quantity[0]++; // 수량 증가
+            currentSale.addItem(product, 1);
+            inventory.updateQuantity(productName, 1);
+            updateSaleTable();
+        }
 
-        // 다이얼로그 크기 및 위치 설정
-        dialog.setSize(400, 200); // 원하는 크기로 설정
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
     }
 
 
-
 //    private void showProductDialog(String productName) {
-//        JDialog dialog = new JDialog(this, "Select Quantity", true);
-//        dialog.setLayout(new FlowLayout());
+//        JDialog dialog = new JDialog(this, "수량 선택", true);
+//        dialog.setLayout(new GridBagLayout());
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.insets = new Insets(10, 10, 10, 10); // 여백 설정
 //
 //        Product product = inventory.getProduct(productName);
-//        if (product == null) {
-//            JOptionPane.showMessageDialog(this, "Product not found!");
-//            return;
-//        }
 //
+//
+//        // 제품 이름 레이블
 //        JLabel productLabel = new JLabel(productName);
-//        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 100, 1);
+//        productLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16)); // 폰트 크기 및 스타일 조정
+//        gbc.gridx = 0;
+//        gbc.gridy = 0;
+//        gbc.gridwidth = 2; // 두 열을 차지하게 설정
+//        dialog.add(productLabel, gbc);
+//
+//        // 개수 조절 레이블
+//        JLabel quantityLabel = new JLabel("수량:");
+//        quantityLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
+//        gbc.gridx = 0;
+//        gbc.gridy = 1;
+//        gbc.gridwidth = 1; // 한 열만 차지하게 설정
+//        dialog.add(quantityLabel, gbc);
+//
+//        // 개수 조절 스피너
+//        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 300, 1);
 //        JSpinner quantitySpinner = new JSpinner(spinnerModel);
 //
-//        JButton addButton = new JButton("Add to Sale");
+//        // JSpinner의 기본 에디터 크기 조정
+//        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor) quantitySpinner.getEditor();
+//        editor.getTextField().setFont(new Font("Arial", Font.PLAIN, 20)); // 폰트 크기 조정
+//        editor.getTextField().setPreferredSize(new Dimension(120, 40)); // 스피너 텍스트 필드 크기 조정
+//        quantitySpinner.setPreferredSize(new Dimension(200, 60)); // 스피너 전체 크기 조정
+//
+//        gbc.gridx = 1;
+//        gbc.gridy = 1;
+//        dialog.add(quantitySpinner, gbc);
+//
+//        // 추가 버튼
+//        JButton addButton = new JButton("상품 추가");
+//        addButton.setPreferredSize(new Dimension(150, 40)); // 버튼 크기 조정
+//        addButton.setFont(new Font("맑은 고딕", Font.PLAIN, 14)); // 폰트 크기 조정
 //        addButton.addActionListener(e -> {
 //            int quantity = (Integer) quantitySpinner.getValue();
 //            if (product.getQuantity() >= quantity) {
@@ -308,19 +296,21 @@ public class POSUI extends JFrame {
 //                updateSaleTable();
 //                dialog.dispose();
 //            } else {
-//                JOptionPane.showMessageDialog(this, "Insufficient stock!");
+//                JOptionPane.showMessageDialog(this, "수량이 너무 많습니다.");
 //            }
 //        });
 //
-//        dialog.add(productLabel);
-//        dialog.add(new JLabel("Quantity:"));
-//        dialog.add(quantitySpinner);
-//        dialog.add(addButton);
+//        gbc.gridx = 0;
+//        gbc.gridy = 2;
+//        gbc.gridwidth = 2; // 두 열을 차지하게 설정
+//        dialog.add(addButton, gbc);
 //
-//        dialog.pack();
+//        // 다이얼로그 크기 및 위치 설정
+//        dialog.setSize(400, 200); // 원하는 크기로 설정
 //        dialog.setLocationRelativeTo(this);
 //        dialog.setVisible(true);
 //    }
+
 
     private void updateSaleTable() {
         DefaultTableModel model = (DefaultTableModel) saleTable.getModel();
@@ -330,40 +320,12 @@ public class POSUI extends JFrame {
             Product product = entry.getKey();
             int quantity = entry.getValue();
             double subtotal = product.getPrice() * quantity;
-            model.addRow(new Object[]{product.getName(), product.getPrice(), quantity, String.format("₩%.2f", subtotal)});
+            model.addRow(new Object[]{product.getName(), String.format("₩%.0f", product.getPrice()), quantity, String.format("₩%.0f", subtotal)});
         }
 
-        totalLabel.setText(String.format("총 합계: ₩%.2f", currentSale.getTotal()));
+        totalLabel.setText(String.format("총 합계: %.0f원", currentSale.getTotal()));
     }
 
-//    private void completeSale() {
-//        if (currentSale.getItems().isEmpty()) {
-//            JOptionPane.showMessageDialog(this, "No items in the current sale!");
-//            return;
-//        }
-//
-//        String receipt = generateReceipt();
-//        byte[] receiptData = receipt.getBytes();
-//        serialComm.sendData(receiptData);
-//
-//        JOptionPane.showMessageDialog(this, "Sale completed and receipt sent to printer!");
-//        currentSale = new Sale();
-//        updateSaleTable();
-//    }
-//
-//    private String generateReceipt() {
-//        StringBuilder receipt = new StringBuilder();
-//        receipt.append("===== POS Receipt =====\n");
-//        for (Map.Entry<Product, Integer> entry : currentSale.getItems().entrySet()) {
-//            Product product = entry.getKey();
-//            int quantity = entry.getValue();
-//            receipt.append(String.format("%s x%d - $%.2f\n", product.getName(), quantity, product.getPrice() * quantity));
-//        }
-//        receipt.append("----------------------\n");
-//        receipt.append(String.format("Total: $%.2f\n", currentSale.getTotal()));
-//        receipt.append("======================\n");
-//        return receipt.toString();
-//    }
 private void completeSale() {
     if (currentSale.getItems().isEmpty()) {
         JOptionPane.showMessageDialog(this, "저장된 목록이 없습니다.");
@@ -422,9 +384,9 @@ private void completeSale() {
     private String generateReceipt() {
         StringBuilder receipt = new StringBuilder();
         double total = currentSale.getTotal();
-        double taxRate = 0.1; // 10% 부가세
-        double taxAmount = total * taxRate;
-        double subtotal = total - taxAmount;
+        double subtotal = total / 1.1;
+        double taxAmount = subtotal * 0.1;
+
 
         receipt.append("상호: 상도동주민들\n");
         receipt.append("사업자번호: 123-45-67890  TEL: 02-820-0114\n");
@@ -440,11 +402,11 @@ private void completeSale() {
             int quantity = entry.getValue();
             double itemTotal = product.getPrice() * quantity;
 
-            // 상품명은 18칸, 단가는 8칸, 수량은 4칸, 금액은 10칸으로 고정
-            String paddedName = padRight(product.getName(), 15); // 상품명을 18칸으로 고정
-            String price = String.format("%,6d", Math.round(product.getPrice())); // 단가 8자리
-            String qty = String.format("%4d", quantity); // 수량 4자리
-            String totalPrice = String.format("%,8d", Math.round(itemTotal)); // 금액 10자리
+
+            String paddedName = padRight(product.getName(), 15);
+            String price = String.format("%,6d", Math.round(product.getPrice()));
+            String qty = String.format("%4d", quantity);
+            String totalPrice = String.format("%,8d", Math.round(itemTotal));
 
             // 상품 정보 추가
             receipt.append(String.format("%s %s원 %s개 %s원\n",
