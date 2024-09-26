@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Map;
 
 
@@ -368,28 +369,55 @@ private void completeSale() {
         JOptionPane.showMessageDialog(this, "저장된 목록이 없습니다.");
         return;
     }
+
     serialComm.clearBuffer();
     String receipt = generateReceipt();
     byte[] receiptData;
+    byte[] cutCommand = {0x1d, 'V', 1};
+
     try {
         receiptData = receipt.getBytes("CP949");
     } catch (UnsupportedEncodingException e) {
         System.err.println("CP949 encoding not supported: " + e.getMessage());
         receiptData = receipt.getBytes(); // 기본 인코딩 사용
     }
-    serialComm.sendData(receiptData);
-    try {
-        Thread.sleep(500);
-    } catch (InterruptedException e) {
-        System.err.println("Thread sleep interrupted: " + e.getMessage());
-    }
-//    serialComm.sendCutCommand();
+
+    byte[] finalData = new byte[receiptData.length + cutCommand.length];
+
+    System.arraycopy(receiptData, 0, finalData, 0, receiptData.length);
+    System.arraycopy(cutCommand, 0, finalData, receiptData.length, cutCommand.length);
+
+    serialComm.sendData(finalData);
 
     JOptionPane.showMessageDialog(this, "완료되었습니다");
 
     currentSale = new Sale();
     updateSaleTable();
 }
+    // 한글과 숫자의 표시 너비를 계산하는 메서드
+    public int getDisplayLength(String str) {
+        int length = 0;
+        for (char c : str.toCharArray()) {
+            if (Character.isDigit(c)) {
+                length += 1; // 숫자는 1칸
+            } else {
+                length += 2; // 한글은 2칸
+            }
+        }
+        return length;
+    }
+
+    // 고정된 너비로 문자열을 맞추는 메서드
+    public String padRight(String str, int totalWidth) {
+        int length = getDisplayLength(str);
+        int padding = totalWidth - length;
+
+        StringBuilder paddedStr = new StringBuilder(str);
+        for (int i = 0; i < padding; i++) {
+            paddedStr.append(' '); // 필요한 만큼 공백 추가
+        }
+        return paddedStr.toString();
+    }
 
     private String generateReceipt() {
         StringBuilder receipt = new StringBuilder();
@@ -403,7 +431,7 @@ private void completeSale() {
         receipt.append("대표자: 이지민\n");
         receipt.append("주소: 서울특별시 동작구 상도로 369\n");
         receipt.append("------------------------------------------\n");
-        receipt.append("상품명                 단가   수량   금액 \n");
+        receipt.append("상품명           단가      수량      금액 \n");
         receipt.append("------------------------------------------\n");
 
         // 각 상품의 정보 추가
@@ -411,11 +439,16 @@ private void completeSale() {
             Product product = entry.getKey();
             int quantity = entry.getValue();
             double itemTotal = product.getPrice() * quantity;
-            receipt.append(String.format("%-14s %3s원 %3d개 %10s원\n",
-                    product.getName(),
-                    String.format("%,d", Math.round(product.getPrice())),
-                    quantity,
-                    String.format("%,d", Math.round(itemTotal))
+
+            // 상품명은 18칸, 단가는 8칸, 수량은 4칸, 금액은 10칸으로 고정
+            String paddedName = padRight(product.getName(), 15); // 상품명을 18칸으로 고정
+            String price = String.format("%,6d", Math.round(product.getPrice())); // 단가 8자리
+            String qty = String.format("%4d", quantity); // 수량 4자리
+            String totalPrice = String.format("%,8d", Math.round(itemTotal)); // 금액 10자리
+
+            // 상품 정보 추가
+            receipt.append(String.format("%s %s원 %s개 %s원\n",
+                    paddedName, price, qty, totalPrice
             ));
         }
 
