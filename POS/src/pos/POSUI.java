@@ -379,11 +379,11 @@ private void completeSale() {
     }
     serialComm.sendData(receiptData);
     try {
-        Thread.sleep(2000); // 2000ms = 2초
+        Thread.sleep(500);
     } catch (InterruptedException e) {
         System.err.println("Thread sleep interrupted: " + e.getMessage());
     }
-    serialComm.sendCutCommand();
+//    serialComm.sendCutCommand();
 
     JOptionPane.showMessageDialog(this, "완료되었습니다");
 
@@ -399,9 +399,11 @@ private void completeSale() {
         double subtotal = total - taxAmount;
 
         receipt.append("상호: 상도동주민들\n");
-        receipt.append("대표자: 이지민\n");
         receipt.append("사업자번호: 123-45-67890  TEL: 02-820-0114\n");
+        receipt.append("대표자: 이지민\n");
         receipt.append("주소: 서울특별시 동작구 상도로 369\n");
+        receipt.append("------------------------------------------\n");
+        receipt.append("상품명                 단가   수량   금액 \n");
         receipt.append("------------------------------------------\n");
 
         // 각 상품의 정보 추가
@@ -409,15 +411,16 @@ private void completeSale() {
             Product product = entry.getKey();
             int quantity = entry.getValue();
             double itemTotal = product.getPrice() * quantity;
-            receipt.append(String.format("%-20s %3d개 %10s원\n",
+            receipt.append(String.format("%-14s %3s원 %3d개 %10s원\n",
                     product.getName(),
+                    String.format("%,d", Math.round(product.getPrice())),
                     quantity,
                     String.format("%,d", Math.round(itemTotal))
             ));
         }
 
         receipt.append("------------------------------------------\n");
-        receipt.append(String.format("거래금액:%31s원\n", String.format("%,d", Math.round(subtotal))));
+        receipt.append(String.format("과세물품:%31s원\n", String.format("%,d", Math.round(subtotal))));
         receipt.append(String.format("부 가 세:%31s원\n", String.format("%,d", Math.round(taxAmount))));
         receipt.append(String.format("총 합 계:%31s원\n", String.format("%,d", Math.round(total))));
         receipt.append("------------------------------------------\n");
