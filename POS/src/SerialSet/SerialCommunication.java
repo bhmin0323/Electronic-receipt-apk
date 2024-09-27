@@ -73,6 +73,22 @@ public class SerialCommunication {
             System.err.println("Serial port is not open. Cannot send data.");
         }
     }
+    public void sendData(String data) {
+        if (serialPort != null && serialPort.isOpen()) {
+            try {
+                // 문자열을 바이트 배열로 변환 (UTF-8 인코딩 사용)
+                byte[] byteData = data.getBytes("UTF-8");
+
+                // 시리얼 포트로 데이터 전송
+                serialPort.getOutputStream().write(byteData);
+                serialPort.getOutputStream().flush();
+            } catch (Exception e) {
+                System.err.println("Error sending data: " + e.getMessage());
+            }
+        } else {
+            System.err.println("Serial port is not open. Cannot send data.");
+        }
+    }
 
     public byte[] receiveData() {
         if (serialPort != null && serialPort.isOpen()) {
@@ -89,10 +105,6 @@ public class SerialCommunication {
         return new byte[0];
     }
 
-    public void sendCutCommand() {
-        byte[] cutCommand = {0x1d, 'V', 1};  // ESC/POS 절단 명령어
-        sendData(cutCommand);
-    }
 
     public void clearBuffer() {
         if (serialPort != null && serialPort.isOpen()) {

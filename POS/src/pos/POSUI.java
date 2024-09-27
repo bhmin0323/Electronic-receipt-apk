@@ -7,6 +7,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 
 
@@ -348,6 +349,9 @@ private void completeSale() {
 
     System.arraycopy(receiptData, 0, finalData, 0, receiptData.length);
     System.arraycopy(cutCommand, 0, finalData, receiptData.length, cutCommand.length);
+
+//    // Base64로 인코딩
+//    String base64EncodedData = Base64.getEncoder().encodeToString(finalData);
 
     serialComm.sendData(finalData);
 
