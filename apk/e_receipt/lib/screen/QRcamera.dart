@@ -13,7 +13,7 @@ class QRpage extends StatefulWidget {
 class _QRpageState extends State<QRpage> {
   final qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  // ApiService 인스턴스 생성
+
   final ApiService _apiService = ApiService();
 
   @override
