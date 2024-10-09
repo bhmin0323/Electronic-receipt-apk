@@ -25,7 +25,7 @@ class _QRpageState extends State<QRpage> {
   @override
   void initState() {
     super.initState();
-    _requestCameraPermission(); // 카메라 권한 요청 함수 호출
+    _requestCameraPermission(); // 카메라 권한 요청
   }
 
   void _requestCameraPermission() async {
@@ -66,7 +66,6 @@ class _QRpageState extends State<QRpage> {
       // 스캔 후 QRViewController를 일시 중지
       await controller.pauseCamera();
       //서버에 QR plain text 요청
-      //int temp = await _apiService.getInfo(qrText);
 
       // QR 스캔 후 qrInfo 페이지로 이동
       Navigator.of(context, rootNavigator: true)
@@ -82,8 +81,3 @@ class _QRpageState extends State<QRpage> {
     });
   }
 }
-
-void main() => runApp(MaterialApp(
-      home: QRpage(),
-      routes: Routes.routes,
-    ));
