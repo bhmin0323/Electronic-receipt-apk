@@ -1,117 +1,94 @@
-import 'package:e_receipt/route_navigator.dart';
+import 'package:e_receipt/model/Receipt_model.dart';
 import 'package:flutter/material.dart';
-import 'QRcamera.dart'; // QR 스캔 페이지 임포트
-import 'QRInfo.dart'; // QR 정보 페이지 임포트
+import 'QRInfo.dart';
+import 'QRcamera.dart';
 
-// Receipt 모델 정의
-class Receipt {
-  final String receiptNumber;
-  final String date;
-  final String storeName;
-  final int amount;
-
-  Receipt({
-    required this.receiptNumber,
-    required this.date,
-    required this.storeName,
-    required this.amount,
-  });
+class MainPage extends StatefulWidget {
+  @override
+  _MainPageState createState() => _MainPageState();
 }
 
-// 영수증 데이터를 파싱하는 함수
-List<Receipt> parseReceiptData(String rawData) {
-  List<Receipt> receipts = [];
-  List<String> receiptStrings = rawData.split("\n\n"); // 두 줄바꿈으로 영수증 구분
-
-  for (String receiptString in receiptStrings) {
-    List<String> fields = receiptString.split('\n');
-    if (fields.length == 4) {
-      receipts.add(
-        Receipt(
-          receiptNumber: fields[0],
-          date: fields[1],
-          storeName: fields[2],
-          amount: int.parse(fields[3]),
-        ),
-      );
-    }
-  }
-
-  return receipts;
-}
-
-// 영수증 목록 페이지
-class ReceiptListPage extends StatelessWidget {
-  // 예시: 서버에서 받아온 영수증 문자열 데이터
-  final String rawReceiptData = '''
-영수증4\n24-09-15\n서브웨이\n10400\n\n
-영수증3\n24-09-10\n롯데마트\n63400\n\n
-영수증2\n24-09-05\n추억사진관\n14000\n\n
-영수증1\n24-08-26\n빽다방\n7800
-  ''';
-  //   final String rawData;
-
-  // ReceiptListPage({required this.rawData});
+class _MainPageState extends State<MainPage> {
+  List<ReceiptData> receiptList = [];
 
   @override
   Widget build(BuildContext context) {
-    List<Receipt> receipts = parseReceiptData(rawReceiptData);
-
     return Scaffold(
       appBar: AppBar(
-        title: Text("영수증 목록"),
-        backgroundColor: Colors.green,
+        title: Container(
+          padding: const EdgeInsets.only(
+            left: 12,
+            right: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Test",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Color.fromRGBO(0, 132, 96, 1),
+        elevation: 5,
+        shadowColor: Colors.grey[300],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: receipts.length,
-              itemBuilder: (context, index) {
-                final receipt = receipts[index];
-                return Card(
-                  margin: EdgeInsets.all(8.0),
-                  child: ListTile(
-                    leading: Icon(Icons.receipt, color: Colors.grey),
-                    title: Text(receipt.storeName),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(receipt.date),
-                        Text('금액: ${receipt.amount}원'),
-                      ],
-                    ),
-                    trailing: Text(receipt.receiptNumber),
-                  ),
-                );
+      body: ListView.builder(
+        itemCount: receiptList.length,
+        itemBuilder: (context, index) {
+          final receipt = receiptList[index];
+          return ListTile(
+            title: Text(receipt.storeName),
+            subtitle: Text(receipt.date),
+            trailing: Text('${receipt.totalPrice}원'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ReceiptDetailPage(receipt)),
+              );
+            },
+          );
+        },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.list),
+              onPressed: () {
+                // 메인 페이지 최상단 이동
+                if (receiptList.isNotEmpty) {
+                  Scrollable.ensureVisible(
+                    context,
+                    duration: Duration(milliseconds: 500),
+                  );
+                }
               },
             ),
-          ),
-          // QR 스캔 페이지로 이동하는 버튼
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
+            IconButton(
+              icon: Icon(Icons.qr_code_scanner),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => QRpage()), // QR 스캔 페이지로 이동
+                  MaterialPageRoute(builder: (context) => QRScanPage()),
                 );
               },
-              icon: Icon(Icons.qr_code_scanner),
-              label: Text('QR 스캔'),
-              style: ElevatedButton.styleFrom(
-                primary: Colors.green, // 버튼 색상
-              ),
             ),
-          ),
-        ],
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                // 검색 기능 (날짜 및 상호명 검색)
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-void main() => runApp(MaterialApp(
-      home: ReceiptListPage(),
-      routes: Routes.routes,
-    ));

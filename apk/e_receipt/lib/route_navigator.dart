@@ -1,3 +1,4 @@
+import 'package:e_receipt/screen/QRcamera.dart';
 import 'package:flutter/material.dart';
 import 'package:e_receipt/screen/QRInfo.dart';
 
@@ -9,8 +10,6 @@ class Routes {
 
   static final routes = <String, WidgetBuilder>{
     // certifypage: (BuildContext context) => Certify_Page(),
-    info: (BuildContext context) => qrInfo_Page(
-          qrData: '',
-        ),
+    info: (BuildContext context) => QRScanPage(),
   };
 }
