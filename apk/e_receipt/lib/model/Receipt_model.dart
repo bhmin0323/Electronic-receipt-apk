@@ -1,42 +1,43 @@
 import 'dart:convert';
 
-class ReceiptData {
+class ReceiptDataModel {
   final String storeName;
   final String date;
-  final List<ReceiptItem> items;
   final int totalPrice;
 
-  ReceiptData({
+  ReceiptDataModel({
     required this.storeName,
     required this.date,
-    required this.items,
     required this.totalPrice,
   });
 
-  factory ReceiptData.fromJson(Map<String, dynamic> json) {
-    var itemsFromJson = json['items'] as List;
-    List<ReceiptItem> itemList =
-        itemsFromJson.map((i) => ReceiptItem.fromJson(i)).toList();
-
-    return ReceiptData(
+  factory ReceiptDataModel.fromJson(Map<String, dynamic> json) {
+    return ReceiptDataModel(
       storeName: json['storeName'],
       date: json['date'],
-      items: itemList,
       totalPrice: json['totalPrice'],
     );
   }
+  Map<String, dynamic> getter() {
+    return {
+      'storeName': storeName,
+      'date': date,
+      'totalPrice': totalPrice,
+    };
+  }
 }
 
-class ReceiptItem {
-  final String name;
-  final int price;
+class ReceiptStringModel {
+  final String text;
 
-  ReceiptItem({required this.name, required this.price});
+  ReceiptStringModel({
+    required this.text,
+  });
 
-  factory ReceiptItem.fromJson(Map<String, dynamic> json) {
-    return ReceiptItem(
-      name: json['name'],
-      price: json['price'],
-    );
+  factory ReceiptStringModel.fromtext(String text) {
+    return ReceiptStringModel(text: text);
+  }
+  String getter() {
+    return text;
   }
 }

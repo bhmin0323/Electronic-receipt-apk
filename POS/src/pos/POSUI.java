@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
@@ -391,6 +393,10 @@ private void completeSale() {
         double subtotal = total / 1.1;
         double taxAmount = subtotal * 0.1;
 
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        String formattedDateTime = now.format(formatter);
+
 
         receipt.append("상호: 상도동주민들\n");
         receipt.append("사업자번호: 123-45-67890  TEL: 02-820-0114\n");
@@ -423,8 +429,9 @@ private void completeSale() {
         receipt.append(String.format("부 가 세:%31s원\n", String.format("%,d", Math.round(taxAmount))));
         receipt.append(String.format("총 합 계:%31s원\n", String.format("%,d", Math.round(total))));
         receipt.append("------------------------------------------\n");
-        receipt.append("전자서명전표\n");
+        receipt.append("거래일시: ").append(formattedDateTime).append("\n");
         receipt.append("------------------------------------------\n");
+        receipt.append("                              전자서명전표\n\n");
         receipt.append("찾아주셔서 감사합니다. (고객용)\n");
         receipt.append("\n");
         receipt.append("\n");

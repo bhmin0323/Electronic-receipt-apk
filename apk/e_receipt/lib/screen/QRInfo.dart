@@ -8,10 +8,15 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:io';
 
 class ReceiptDetailPage extends StatefulWidget {
-  final ReceiptData receipt;
+  final String receiptString;
+  // final Future<ReceiptDataModel> receiptData;
   final VoidCallback onDeleted; // 삭제 콜백 추가
 
-  ReceiptDetailPage(this.receipt, {required this.onDeleted}); // 수정된 부분
+  ReceiptDetailPage({
+    required this.onDeleted,
+    required this.receiptString,
+    // required this.receiptData,
+  }); // 수정된 부분
 
   @override
   _ReceiptDetailPageState createState() => _ReceiptDetailPageState();
@@ -20,6 +25,14 @@ class ReceiptDetailPage extends StatefulWidget {
 class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
   GlobalKey _globalKey = GlobalKey(); // 캡처할 위젯의 키
 
+  @override
+  void initState() {
+    super.initState();
+    // State에서 직접 receiptString을 초기화
+    receiptString = widget.receiptString;
+  }
+
+  late final String receiptString;
   Future<void> _captureAndSavePng() async {
     try {
       // RepaintBoundary로부터 이미지 생성
@@ -46,7 +59,8 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('영수증 상세 페이지'),
+        title: Text('영수증'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.delete),
@@ -63,28 +77,16 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0), // 여백 추가
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('상호명: ${widget.receipt.storeName}',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('날짜: ${widget.receipt.date}',
-                  style: TextStyle(fontSize: 16)),
-              SizedBox(height: 8),
-              Text('총 금액: ${widget.receipt.totalPrice}원',
-                  style: TextStyle(fontSize: 16)),
-              SizedBox(height: 16),
-              Text('항목 목록:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: widget.receipt.items.length,
-                itemBuilder: (context, index) {
-                  final item = widget.receipt.items[index];
-                  return Text('${item.name}: ${item.price}원',
-                      style: TextStyle(fontSize: 16));
-                },
+              Text(
+                receiptString,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'NotoSansKR',
+                  letterSpacing: 0.5,
+                ),
               ),
               Spacer(), // 공간을 확보하여 버튼을 아래로 위치
               Padding(

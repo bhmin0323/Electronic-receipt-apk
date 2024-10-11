@@ -5,14 +5,16 @@ import 'package:e_receipt/model/Receipt_model.dart';
 
 class ReceiptWidget extends StatelessWidget {
   final int index;
-  final ReceiptData receipt;
+  final ReceiptDataModel receipt;
   final VoidCallback onDeleted;
+  final String receiptString;
 
   const ReceiptWidget({
     Key? key,
     required this.index,
     required this.receipt,
     required this.onDeleted,
+    required this.receiptString,
   }) : super(key: key);
 
   @override
@@ -24,8 +26,8 @@ class ReceiptWidget extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => ReceiptDetailPage(
-              receipt,
               onDeleted: () => onDeleted,
+              receiptString: receiptString,
             ),
           ),
         );
@@ -49,18 +51,32 @@ class ReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '상호명: ${receipt.storeName}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  '영수증 ${index}',
+                  // style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text('${receipt.date}'),
+              ],
+            ),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${receipt.storeName}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 Text(
                   '${receipt.totalPrice}원',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 5),
-            Text('날짜: ${receipt.date}'),
-            const Divider(),
             // 추가적인 영수증 항목을 원한다면 여기서 표시 가능
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

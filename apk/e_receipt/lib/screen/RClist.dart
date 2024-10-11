@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:e_receipt/model/Receipt_model.dart';
 import 'package:e_receipt/widget/Receipt_widget.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<ReceiptData> receiptList = [];
+  List<ReceiptDataModel> receiptList = [];
+  List<ReceiptStringModel> receiptStringList = [];
 
   @override
   void initState() {
@@ -21,24 +24,56 @@ class _MainPageState extends State<MainPage> {
   void _loadSampleData() {
     setState(() {
       receiptList = [
-        ReceiptData(
+        ReceiptDataModel(
           storeName: '롯데마트',
           date: '2024-10-10',
-          items: [
-            ReceiptItem(name: '사과', price: 2000),
-            ReceiptItem(name: '바나나', price: 1500),
-          ],
           totalPrice: 3500,
         ),
-        ReceiptData(
+        ReceiptDataModel(
           storeName: '이마트',
           date: '2024-10-09',
-          items: [
-            ReceiptItem(name: '우유', price: 2500),
-            ReceiptItem(name: '빵', price: 1800),
-          ],
           totalPrice: 4300,
         ),
+      ];
+      receiptStringList = [
+        ReceiptStringModel(text: '''상호: 상도동주민들
+사업자번호: 123-45-67890 
+TEL: 02-820-0114
+대표자: 이지민
+주소: 서울특별시 동작구 상도로 369
+------------------------------------------
+상품명           단가      수량      금액 
+------------------------------------------
+과세물품:                       150,000원
+부 가 세:                        15,000원
+총 합 계:                       165,000원
+------------------------------------------
+거래일시: 24/10/07 13:53:05
+------------------------------------------
+                              전자서명전표
+
+찾아주셔서 감사합니다. (고객용)
+\n\n\n\n\n\n
+'''),
+        ReceiptStringModel(text: '''상호: 상도동주민들
+사업자번호: 123-45-67890 
+TEL: 02-820-0114
+대표자: 이지민
+주소: 서울특별시 동작구 상도로 369
+------------------------------------------
+상품명           단가      수량      금액 
+------------------------------------------
+과세물품:                        50,000원
+부 가 세:                        15,000원
+총 합 계:                        65,000원
+------------------------------------------
+거래일시: 24/10/07 13:53:05
+------------------------------------------
+                              전자서명전표
+
+찾아주셔서 감사합니다. (고객용)
+\n\n\n\n\n\n
+'''),
       ];
     });
   }
@@ -77,10 +112,12 @@ class _MainPageState extends State<MainPage> {
         itemCount: receiptList.length,
         itemBuilder: (context, index) {
           final receipt = receiptList[index];
+          log((receiptStringList.last.getter()));
           return ReceiptWidget(
             index: index,
             receipt: receipt,
             onDeleted: () => deleteReceipt(index),
+            receiptString: receiptStringList[index].getter(),
           );
         },
       ),
