@@ -4,6 +4,7 @@ import 'package:e_receipt/screen/QRInfo.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QRScanPage extends StatefulWidget {
   @override
@@ -46,8 +47,11 @@ class _QRScanPageState extends State<QRScanPage> {
                         .replaceAll(RegExp(r'\n{6}$'), '');
                     final receiptData = parseReceiptData(receiptString);
 
-                    ReceiptDataModel.fromJson(receiptData);
-                    ReceiptStringModel.fromtext(receiptString);
+                    final receiptModel = ReceiptDataModel.fromJson(receiptData);
+                    final receiptTextModel =
+                        ReceiptStringModel.fromtext(receiptString);
+
+                    await _saveReceiptData(receiptModel, receiptTextModel);
 
                     Navigator.push(
                       context,
@@ -75,6 +79,27 @@ class _QRScanPageState extends State<QRScanPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _saveReceiptData(
+      ReceiptDataModel receiptData, ReceiptStringModel receiptString) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 기존의 영수증 리스트 불러오기
+    List<String>? receiptDataList = prefs.getStringList('receipt_data_list');
+    List<String>? receiptStringList = prefs.getStringList('receipt_text_list');
+
+    // 영수증 리스트가 없으면 새 리스트 생성
+    receiptDataList = receiptDataList ?? [];
+    receiptStringList = receiptStringList ?? [];
+
+    // 새로운 영수증 데이터 추가
+    receiptDataList.add(jsonEncode(receiptData));
+    receiptStringList.add(receiptString.getter());
+
+    // 업데이트된 리스트 저장
+    await prefs.setStringList('receipt_data_list', receiptDataList);
+    await prefs.setStringList('receipt_text_list', receiptStringList);
   }
 
   Future<String> fetchReceiptData(String qrCode) async {
@@ -124,39 +149,3 @@ class _QRScanPageState extends State<QRScanPage> {
     super.dispose();
   }
 }
-
-// class ReceiptDetailPage extends StatelessWidget {
-//   final String receiptString; // 영수증 원본 string 데이터
-//   final Map<String, dynamic> receiptData; // 파싱된 json 데이터
-
-//   ReceiptDetailPage({
-//     required this.receiptString,
-//     required this.receiptData,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('영수증 상세'),
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // 영수증 원본 string 데이터 표시
-//             Text('영수증 원본:',
-//                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-//             Text(receiptString),
-//             SizedBox(height: 20),
-//             // 파싱된 json 데이터 표시
-//             Text('상호명: ${receiptData['storeName']}'),
-//             Text('총 합계: ${receiptData['totalPrice']}원'),
-//             Text('거래일시: ${receiptData['date']}'),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

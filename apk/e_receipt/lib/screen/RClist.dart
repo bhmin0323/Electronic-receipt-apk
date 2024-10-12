@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:e_receipt/Data_save.dart';
 import 'package:e_receipt/model/Receipt_model.dart';
 import 'package:e_receipt/widget/Receipt_widget.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +18,28 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    // 샘플 영수증 데이터 추가
-    _loadSampleData();
+    _loadSampleData(); // 샘플 영수증 데이터 추가
+    _saveSampleData();
+    _loadSavedData();
+  }
+
+  void _loadSavedData() async {
+    List<ReceiptDataModel> loadedReceipts =
+        await DataManage().loadReceiptDataList();
+    List<ReceiptStringModel> loadedReceiptTexts =
+        await DataManage().loadReceiptTextList();
+
+    setState(() {
+      receiptList = loadedReceipts;
+      receiptStringList = loadedReceiptTexts;
+    });
+  }
+
+  void _saveSampleData() {
+    setState(() {
+      DataManage().saveReceiptDataList(receiptList);
+      DataManage().saveReceiptTextList(receiptStringList);
+    });
   }
 
   void _loadSampleData() {
@@ -81,7 +102,9 @@ TEL: 02-820-0114
   void deleteReceipt(int index) {
     setState(() {
       receiptList.removeAt(index);
+      receiptStringList.removeAt(index);
     });
+    log('${receiptList}');
   }
 
   @override
@@ -112,7 +135,7 @@ TEL: 02-820-0114
         itemCount: receiptList.length,
         itemBuilder: (context, index) {
           final receipt = receiptList[index];
-          log((receiptStringList.last.getter()));
+          log((receiptStringList[index].getter()));
           return ReceiptWidget(
             index: index,
             receipt: receipt,
