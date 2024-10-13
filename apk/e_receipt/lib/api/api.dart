@@ -36,8 +36,8 @@ class ApiService {
   }
 
   // 요청
-  Future<int> getInfo(String pltext) async {
-    final url = Uri.http(baseUrl, '/download?id=$pltext');
+  Future<String> getInfo(String id, String hash) async {
+    final url = Uri.http(baseUrl, '/view?id=${id}?hash=${hash}');
     final response = await http.get(
       url,
     );
@@ -45,6 +45,6 @@ class ApiService {
     if (response.statusCode != 204) {
       log('Server Response : ${response.statusCode}');
     }
-    return 0;
+    return response.body;
   }
 }
