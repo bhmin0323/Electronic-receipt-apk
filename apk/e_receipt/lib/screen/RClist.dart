@@ -46,13 +46,13 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       receiptList = [
         ReceiptDataModel(
-          storeName: '롯데마트',
-          date: '2024-10-10',
+          storeName: '서브웨이',
+          date: '2024-10-19',
           totalPrice: 3500,
         ),
         ReceiptDataModel(
           storeName: '이마트',
-          date: '2024-10-09',
+          date: '2024-10-20',
           totalPrice: 4300,
         ),
       ];

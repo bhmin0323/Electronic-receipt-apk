@@ -89,7 +89,6 @@ class _QRScanPageState extends State<QRScanPage> {
   }
 
   Future<String> parseUrl(String url) async {
-    // URL을 Uri 객체로 변환
     Uri uri = Uri.parse(url);
 
     // id와 hash 값 추출
@@ -124,6 +123,34 @@ class _QRScanPageState extends State<QRScanPage> {
     await prefs.setStringList('receipt_text_list', receiptStringList);
   }
 
+  // 필요한 데이터 파싱
+  Map<String, dynamic> parseReceiptData(String receiptString) {
+    // 상호
+    RegExp merchantRegExp = RegExp(r'상호:\s*(.*)');
+    String? storeName = merchantRegExp.firstMatch(receiptString)?.group(1);
+
+    // 총 합계
+    RegExp totalAmountRegExp = RegExp(r'총 합 계:\s*([\d,]+원)');
+    String? totalPrice = totalAmountRegExp.firstMatch(receiptString)?.group(1);
+
+    // 거래일시
+    RegExp dateRegExp =
+        RegExp(r'거래일시:\s*(\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})');
+    String? date = dateRegExp.firstMatch(receiptString)?.group(1);
+
+    return {
+      'storeName': storeName,
+      'date': date,
+      'totalPrice': totalPrice,
+    };
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+}
 //   Future<String> fetchReceiptData(String qrCode) async {
 //     // 서버에서 QR 코드로 받은 영수증 string 데이터를 fetch합니다.
 //     // 예시용으로 string 데이터를 바로 반환
@@ -146,32 +173,3 @@ class _QRScanPageState extends State<QRScanPage> {
 // \n\n\n\n\n\n
 // ''');
 //   }
-
-  // 필요한 데이터만 파싱하여 json으로 저장
-  Map<String, dynamic> parseReceiptData(String receiptString) {
-    // 상호 추출
-    RegExp merchantRegExp = RegExp(r'상호:\s*(.*)');
-    String? storeName = merchantRegExp.firstMatch(receiptString)?.group(1);
-
-    // 총 합계 추출
-    RegExp totalAmountRegExp = RegExp(r'총 합 계:\s*([\d,]+원)');
-    String? totalPrice = totalAmountRegExp.firstMatch(receiptString)?.group(1);
-
-    // 거래일시 추출
-    RegExp dateRegExp =
-        RegExp(r'거래일시:\s*(\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})');
-    String? date = dateRegExp.firstMatch(receiptString)?.group(1);
-
-    return {
-      'storeName': storeName,
-      'date': date,
-      'totalPrice': totalPrice,
-    };
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-}

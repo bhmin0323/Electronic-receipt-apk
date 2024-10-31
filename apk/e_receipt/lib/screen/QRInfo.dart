@@ -65,7 +65,6 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: () {
-              // 삭제 버튼 클릭 시
               widget.onDeleted(); // 삭제 콜백 호출
               Navigator.pop(context); // 상세 페이지 닫기
             },
@@ -73,7 +72,7 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
         ],
       ),
       body: RepaintBoundary(
-        key: _globalKey, // RepaintBoundary로 위젯을 감싸고 GlobalKey 설정
+        key: _globalKey,
         child: Padding(
           padding: const EdgeInsets.all(16.0), // 여백 추가
           child: Column(
@@ -88,11 +87,11 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
                   letterSpacing: 0.5,
                 ),
               ),
-              Spacer(), // 공간을 확보하여 버튼을 아래로 위치
+              Spacer(),
               Padding(
-                padding: const EdgeInsets.only(bottom: 16.0), // 하단 여백 추가
+                padding: const EdgeInsets.only(bottom: 16.0), // 하단 여백
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center, // 중앙 정렬
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       child: ElevatedButton(
@@ -100,8 +99,7 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
                         style: ElevatedButton.styleFrom(
                           primary: Color.fromRGBO(0, 132, 96, 1),
                           onPrimary: Colors.white,
-                          padding:
-                              EdgeInsets.symmetric(vertical: 15.0), // 수직 패딩 조정
+                          padding: EdgeInsets.symmetric(vertical: 15.0),
                           textStyle: TextStyle(fontSize: 18),
                         ),
                         child: Text(
