@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:e_receipt/api/api.dart';
 import 'package:e_receipt/model/Receipt_model.dart';
 import 'package:e_receipt/screen/QRInfo.dart';
@@ -94,6 +95,8 @@ class _QRScanPageState extends State<QRScanPage> {
     // id와 hash 값 추출
     String? id = uri.queryParameters['id'];
     String? hash = uri.queryParameters['hash'];
+
+    log("$id,$hash");
 
     final pltext = await ApiService().getInfo(id!, hash!);
 
