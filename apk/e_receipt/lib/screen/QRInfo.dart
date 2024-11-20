@@ -23,7 +23,7 @@ class ReceiptDetailPage extends StatefulWidget {
 }
 
 class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
-  GlobalKey _globalKey = GlobalKey(); // 캡처할 위젯의 키
+  GlobalKey _captureKey = GlobalKey(); // 캡처할 위젯의 키
 
   @override
   void initState() {
@@ -35,16 +35,33 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
   late final String receiptString;
   Future<void> _captureAndSavePng() async {
     try {
-      // RepaintBoundary로부터 이미지 생성
-      RenderRepaintBoundary boundary = _globalKey.currentContext!
+      RenderRepaintBoundary boundary = _captureKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
+
+      // 캡처 이미지 생성
       ui.Image image = await boundary.toImage();
       ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
+      // 배경색 적용
+      ui.PictureRecorder recorder = ui.PictureRecorder();
+      Canvas canvas = Canvas(recorder);
+      Paint paint = Paint()..color = Colors.white;
+      canvas.drawRect(
+          Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+          paint);
+
+      canvas.drawImage(image, Offset.zero, Paint());
+      ui.Image finalImage =
+          await recorder.endRecording().toImage(image.width, image.height);
+
+      ByteData? finalByteData =
+          await finalImage.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List finalPngBytes = finalByteData!.buffer.asUint8List();
+
       // 갤러리에 이미지 저장
-      final result = await ImageGallerySaver.saveImage(pngBytes);
+      final result = await ImageGallerySaver.saveImage(finalPngBytes);
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(result['isSuccess'] ? '이미지가 갤러리에 저장되었습니다.' : '저장 실패')));
@@ -71,14 +88,15 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
           ),
         ],
       ),
-      body: RepaintBoundary(
-        key: _globalKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0), // 여백 추가
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          RepaintBoundary(
+            key: _captureKey, // 캡처할 텍스트만 감싸기
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(35.0, 35.0, 35.0, 1.0),
+              // 왼쪽: 24, 위: 32, 오른쪽: 24, 아래: 8
+              child: Text(
                 receiptString,
                 style: const TextStyle(
                   fontSize: 18,
@@ -87,33 +105,33 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
                   letterSpacing: 0.5,
                 ),
               ),
-              Spacer(),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0), // 하단 여백
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _captureAndSavePng,
-                        style: ElevatedButton.styleFrom(
-                          primary: Color.fromRGBO(0, 132, 96, 1),
-                          onPrimary: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 15.0),
-                          textStyle: TextStyle(fontSize: 18),
-                        ),
-                        child: Text(
-                          '이미지 저장',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0), // 하단 여백
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _captureAndSavePng,
+                    style: ElevatedButton.styleFrom(
+                      primary: Color.fromRGBO(0, 132, 96, 1),
+                      onPrimary: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                      textStyle: TextStyle(fontSize: 18),
+                    ),
+                    child: Text(
+                      '이미지 저장',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

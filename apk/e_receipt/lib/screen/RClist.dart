@@ -23,6 +23,19 @@ class _MainPageState extends State<MainPage> {
     _loadSavedData();
   }
 
+  void _refreshReceipts() async {
+    // 저장된 데이터 다시 로드
+    List<ReceiptDataModel> refreshedReceipts =
+        await DataManage().loadReceiptDataList();
+    List<ReceiptStringModel> refreshedReceiptTexts =
+        await DataManage().loadReceiptTextList();
+
+    setState(() {
+      receiptList = refreshedReceipts;
+      receiptStringList = refreshedReceiptTexts;
+    });
+  }
+
   void _loadSavedData() async {
     List<ReceiptDataModel> loadedReceipts =
         await DataManage().loadReceiptDataList();
@@ -46,14 +59,14 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       receiptList = [
         ReceiptDataModel(
-          storeName: '서브웨이',
-          date: '2024-10-19',
-          totalPrice: 3500,
+          storeName: '상도동주민들',
+          date: '2024-11-12',
+          totalPrice: 165000,
         ),
         ReceiptDataModel(
-          storeName: '이마트',
-          date: '2024-10-20',
-          totalPrice: 4300,
+          storeName: '상도동주민',
+          date: '2024-11-15',
+          totalPrice: 65000,
         ),
       ];
       receiptStringList = [
@@ -69,14 +82,14 @@ TEL: 02-820-0114
 부 가 세:                        15,000원
 총 합 계:                       165,000원
 ------------------------------------------
-거래일시: 2024-10-07 13:53:05
+거래일시: 2024-11-12 13:53:05
 ------------------------------------------
                               전자서명전표
 
 찾아주셔서 감사합니다. (고객용)
 \n\n\n\n\n\n
 '''),
-        ReceiptStringModel(text: '''상호: 상도동주민들
+        ReceiptStringModel(text: '''상호: 상도동주민
 사업자번호: 123-45-67890 
 TEL: 02-820-0114
 대표자: 이지민
@@ -88,7 +101,7 @@ TEL: 02-820-0114
 부 가 세:                        15,000원
 총 합 계:                        65,000원
 ------------------------------------------
-거래일시: 2024-10-07 13:53:05
+거래일시: 2024-11-15 13:53:05
 ------------------------------------------
                               전자서명전표
 
@@ -134,13 +147,15 @@ TEL: 02-820-0114
       body: ListView.builder(
         itemCount: receiptList.length,
         itemBuilder: (context, index) {
-          final receipt = receiptList[index];
+          final reversedIndex = receiptList.length - 1 - index;
+          final receipt = receiptList[reversedIndex];
+          final receiptString = receiptStringList[reversedIndex].getter();
           log((receiptStringList[index].getter()));
           return ReceiptWidget(
-            index: index,
+            index: reversedIndex,
             receipt: receipt,
-            onDeleted: () => deleteReceipt(index),
-            receiptString: receiptStringList[index].getter(),
+            onDeleted: () => deleteReceipt(reversedIndex),
+            receiptString: receiptString,
           );
         },
       ),
@@ -169,6 +184,7 @@ TEL: 02-820-0114
                           duration: const Duration(milliseconds: 500),
                         );
                       }
+                      _refreshReceipts();
                     },
                   ),
                   // const Text(
