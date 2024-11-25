@@ -34,56 +34,76 @@ class _QRScanPageState extends State<QRScanPage> {
         title: Text('QR 스캔'),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 7,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: (QRViewController controller) {
-                this.controller = controller;
-                controller.scannedDataStream.listen(
-                  (scanData) async {
-                    final String qrCode = scanData.code!;
-                    await controller.pauseCamera();
+      body: GestureDetector(
+        onTap: () {
+          if (controller != null) {
+            controller!.resumeCamera();
+          }
+        },
+        child: Column(
+          children: [
+            Expanded(
+              flex: 7,
+              child: QRView(
+                key: qrKey,
+                onQRViewCreated: (QRViewController controller) {
+                  this.controller = controller;
+                  controller.scannedDataStream.listen(
+                    (scanData) async {
+                      final String qrCode = scanData.code!;
+                      await controller.pauseCamera();
 
-                    final receiptString = (await parseUrl(qrCode))
-                        .replaceAll(RegExp(r'\n{6}$'), '');
-                    final receiptData = parseReceiptData(receiptString);
+                      final receiptString = await parseUrl(qrCode);
 
-                    final receiptModel = ReceiptDataModel.fromJson(receiptData);
-                    final receiptTextModel =
-                        ReceiptStringModel.fromtext(receiptString);
-
-                    await _saveReceiptData(receiptModel, receiptTextModel);
-
-                    if (mounted) {
-                      // BuildContext가 여전히 유효한지 확인
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReceiptDetailPage(
-                            receiptString: receiptString,
-                            onDeleted: () {},
+                      if (receiptString == '1') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('서버에 연결할 수 없습니다.'),
+                            backgroundColor: Colors.red,
                           ),
-                        ),
-                      );
-                    }
-                  },
-                );
-              },
-            ),
-          ),
-          const Expanded(
-            flex: 1,
-            child: Center(
-              child: Text(
-                '확인할 영수증의 QR코드를 스캔하세요.',
-                style: TextStyle(fontSize: 18),
+                        );
+                      } else {
+                        final receiptData = parseReceiptData(receiptString);
+
+                        final receiptModel =
+                            ReceiptDataModel.fromJson(receiptData);
+                        final receiptTextModel =
+                            ReceiptStringModel.fromtext(receiptString);
+
+                        await _saveReceiptData(receiptModel, receiptTextModel);
+
+                        if (mounted) {
+                          // BuildContext가 여전히 유효한지 확인
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ReceiptDetailPage(
+                                receiptString: receiptString,
+                                onDeleted: () {},
+                              ),
+                            ),
+                          ).then((_) {
+                            // ReceiptDetailPage에서 돌아왔을 때 카메라를 다시 시작하도록 설정
+                            controller?.resumeCamera();
+                          });
+                        }
+                      }
+                    },
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            const Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  '확인할 영수증의 QR코드를 스캔하세요.',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -98,6 +118,9 @@ class _QRScanPageState extends State<QRScanPage> {
     log("$id,$hash");
 
     final pltext = await ApiService().getInfo(id!, hash!);
+    if (pltext == '-1') {
+      return '-1';
+    }
 
     return pltext;
   }
@@ -115,7 +138,7 @@ class _QRScanPageState extends State<QRScanPage> {
     receiptStringList = receiptStringList ?? [];
 
     // 새로운 영수증 데이터 추가
-    receiptDataList.add(jsonEncode(receiptData));
+    receiptDataList.add(jsonEncode(receiptData.tojson()));
     receiptStringList.add(receiptString.getter());
 
     // 업데이트된 리스트 저장
@@ -125,19 +148,20 @@ class _QRScanPageState extends State<QRScanPage> {
 
   // 필요한 데이터 파싱
   Map<String, dynamic> parseReceiptData(String receiptString) {
+    log('${receiptString}');
     // 상호
     RegExp merchantRegExp = RegExp(r'상호:\s*(.*)');
-    String? storeName = merchantRegExp.firstMatch(receiptString)?.group(1);
-
+    String? storeName =
+        merchantRegExp.firstMatch(receiptString)?.group(1)?.trim();
+    log('${storeName}');
+    // 거래일시
+    RegExp dateRegExp = RegExp(r'거래일시:\s*(\d{4}-\d{2}-\d{2})');
+    String? date = dateRegExp.firstMatch(receiptString)?.group(1);
+    log('${date}');
     // 총 합계
     RegExp totalAmountRegExp = RegExp(r'총 합 계:\s*([\d,]+원)');
     String? totalPrice = totalAmountRegExp.firstMatch(receiptString)?.group(1);
-
-    // 거래일시
-    RegExp dateRegExp =
-        RegExp(r'거래일시:\s*(\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})');
-    String? date = dateRegExp.firstMatch(receiptString)?.group(1);
-
+    log('${totalPrice}');
     return {
       'storeName': storeName,
       'date': date,
@@ -151,25 +175,3 @@ class _QRScanPageState extends State<QRScanPage> {
     super.dispose();
   }
 }
-//   Future<String> fetchReceiptData(String qrCode) async {
-//     // 서버에서 QR 코드로 받은 영수증 string 데이터를 fetch합니다.
-//     // 예시용으로 string 데이터를 바로 반환
-//     return Future.value('''상호: 상도동주민들
-// 사업자번호: 123-45-67890  TEL: 02-820-0114
-// 대표자: 이지민
-// 주소: 서울특별시 동작구 상도로 369
-// ------------------------------------------
-// 상품명           단가      수량      금액
-// ------------------------------------------
-// 과세물품:                       150,000원
-// 부 가 세:                        15,000원
-// 총 합 계:                       165,000원
-// ------------------------------------------
-// 거래일시: 2024-10-07 13:53:05
-// ------------------------------------------
-//                               전자서명전표
-
-// 찾아주셔서 감사합니다. (고객용)
-// \n\n\n\n\n\n
-// ''');
-//   }

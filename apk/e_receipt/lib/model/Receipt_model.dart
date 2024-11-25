@@ -3,7 +3,7 @@ import 'dart:convert';
 class ReceiptDataModel {
   final String storeName;
   final String date;
-  final int totalPrice;
+  final String totalPrice;
 
   ReceiptDataModel({
     required this.storeName,
@@ -18,7 +18,7 @@ class ReceiptDataModel {
       totalPrice: json['totalPrice'],
     );
   }
-  Map<String, dynamic> getter() {
+  Map<String, dynamic> tojson() {
     return {
       'storeName': storeName,
       'date': date,

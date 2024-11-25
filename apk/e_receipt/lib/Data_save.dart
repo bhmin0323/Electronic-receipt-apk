@@ -8,7 +8,7 @@ class DataManage {
       List<ReceiptDataModel> receiptDataList) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> jsonDataList = receiptDataList.map((receiptData) {
-      return jsonEncode(receiptData.getter());
+      return jsonEncode(receiptData.tojson());
     }).toList();
     await prefs.setStringList('receipt_data_list', jsonDataList);
   }
