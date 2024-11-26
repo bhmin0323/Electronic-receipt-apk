@@ -135,7 +135,9 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
             child: Text(
               widget.receiptString,
               style: TextStyle(
-                fontSize: screenWidth * 0.04,
+                fontSize: screenWidth * 0.0348,
+                fontFamily: "consola",
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

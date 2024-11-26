@@ -43,7 +43,9 @@ class ApiService {
         url,
       );
       log("/status: <${response.statusCode}>, <${response.body}>");
-      if (response.statusCode != 200) {
+      if (response.statusCode == 404) {
+        return '${response.statusCode}';
+      } else if (response.statusCode != 200) {
         log('Server Response : ${response.statusCode}');
         return '-1';
       }
@@ -51,6 +53,7 @@ class ApiService {
     } catch (e) {
       log('Error: fail connect server - $e');
       return '-1';
+      // return '${e}';
     }
   }
 }

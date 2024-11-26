@@ -59,14 +59,55 @@ class _QRScanPageState extends State<QRScanPage> {
                       await controller.pauseCamera();
 
                       final receiptString = await parseUrl(qrCode);
+                      log('receipstring: ${receiptString}');
 
                       if (receiptString == '-1') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('서버에 연결할 수 없습니다.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('서버연결 오류${receiptString}'),
+                              content:
+                                  const Text("서버에 연결할 수 없습니다.\n다시 시도해주세요."),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("확인"),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ).then((_) {
+                          controller.resumeCamera();
+                        });
+                      } else if (receiptString == '404') {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text("QR 오류"),
+                              content: const Text("만료된 QR코드입니다."),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("확인"),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ).then((_) {
+                          controller.resumeCamera();
+                        });
                       } else {
                         final receiptData = parseReceiptData(receiptString);
 
@@ -182,6 +223,7 @@ class _QRScanPageState extends State<QRScanPage> {
     RegExp totalAmountRegExp = RegExp(r'총 합 계:\s*([\d,]+원)');
     String? totalPrice = totalAmountRegExp.firstMatch(receiptString)?.group(1);
     log('${totalPrice}');
+
     return {
       'storeName': storeName,
       'date': date,

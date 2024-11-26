@@ -80,6 +80,10 @@ flutter:
         - asset: assets/fonts/NotoSansKR-Medium.ttf
         - asset: assets/fonts/NotoSansKR-Regular.ttf
         - asset: assets/fonts/NotoSansKR-Thin.ttf
+    - family: consola
+      fonts:
+        - asset: assets/fonts/consola.ttf
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
