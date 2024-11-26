@@ -7,8 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:e_receipt/Data_save.dart';
 
 class QRScanPage extends StatefulWidget {
+  final Function onReceiptAdded;
+
+  QRScanPage({required this.onReceiptAdded});
+
   @override
   _QRScanPageState createState() => _QRScanPageState();
 }
@@ -55,7 +60,7 @@ class _QRScanPageState extends State<QRScanPage> {
 
                       final receiptString = await parseUrl(qrCode);
 
-                      if (receiptString == '1') {
+                      if (receiptString == '-1') {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('서버에 연결할 수 없습니다.'),
@@ -71,6 +76,7 @@ class _QRScanPageState extends State<QRScanPage> {
                             ReceiptStringModel.fromtext(receiptString);
 
                         await _saveReceiptData(receiptModel, receiptTextModel);
+                        widget.onReceiptAdded();
 
                         if (mounted) {
                           // BuildContext가 여전히 유효한지 확인
@@ -78,13 +84,32 @@ class _QRScanPageState extends State<QRScanPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ReceiptDetailPage(
+                                index: -1,
                                 receiptString: receiptString,
-                                onDeleted: () {},
+                                onDeleted: () async {
+                                  // 수정: 상세 페이지에서 삭제 시 저장소 업데이트
+                                  final dataManager = DataManage();
+                                  final currentDataList =
+                                      await dataManager.loadReceiptDataList();
+                                  final currentStringList =
+                                      await dataManager.loadReceiptTextList();
+
+                                  currentDataList.removeLast();
+                                  currentStringList.removeLast();
+
+                                  await dataManager
+                                      .saveReceiptDataList(currentDataList);
+                                  await dataManager
+                                      .saveReceiptTextList(currentStringList);
+
+                                  widget.onReceiptAdded(); // 메인 페이지 업데이트
+                                  Navigator.pop(context);
+                                },
                               ),
                             ),
                           ).then((_) {
                             // ReceiptDetailPage에서 돌아왔을 때 카메라를 다시 시작하도록 설정
-                            controller?.resumeCamera();
+                            controller.resumeCamera();
                           });
                         }
                       }
@@ -110,40 +135,35 @@ class _QRScanPageState extends State<QRScanPage> {
 
   Future<String> parseUrl(String url) async {
     Uri uri = Uri.parse(url);
+    try {
+      // id와 hash 값 추출
+      String? id = uri.queryParameters['id'];
+      String? hash = uri.queryParameters['hash'];
 
-    // id와 hash 값 추출
-    String? id = uri.queryParameters['id'];
-    String? hash = uri.queryParameters['hash'];
+      log("$id,$hash");
 
-    log("$id,$hash");
+      final pltext = await ApiService().getInfo(id!, hash!);
+      if (pltext == '-1') {
+        return '-1';
+      }
 
-    final pltext = await ApiService().getInfo(id!, hash!);
-    if (pltext == '-1') {
+      return pltext;
+    } catch (e) {
       return '-1';
     }
-
-    return pltext;
   }
 
   Future<void> _saveReceiptData(
       ReceiptDataModel receiptData, ReceiptStringModel receiptString) async {
-    final prefs = await SharedPreferences.getInstance();
+    final dataManager = DataManage();
+    final currentDataList = await dataManager.loadReceiptDataList();
+    final currentStringList = await dataManager.loadReceiptTextList();
 
-    // 기존의 영수증 리스트 불러오기
-    List<String>? receiptDataList = prefs.getStringList('receipt_data_list');
-    List<String>? receiptStringList = prefs.getStringList('receipt_text_list');
+    currentDataList.add(receiptData);
+    currentStringList.add(receiptString);
 
-    // 영수증 리스트가 없으면 새 리스트 생성
-    receiptDataList = receiptDataList ?? [];
-    receiptStringList = receiptStringList ?? [];
-
-    // 새로운 영수증 데이터 추가
-    receiptDataList.add(jsonEncode(receiptData.tojson()));
-    receiptStringList.add(receiptString.getter());
-
-    // 업데이트된 리스트 저장
-    await prefs.setStringList('receipt_data_list', receiptDataList);
-    await prefs.setStringList('receipt_text_list', receiptStringList);
+    await dataManager.saveReceiptDataList(currentDataList);
+    await dataManager.saveReceiptTextList(currentStringList);
   }
 
   // 필요한 데이터 파싱

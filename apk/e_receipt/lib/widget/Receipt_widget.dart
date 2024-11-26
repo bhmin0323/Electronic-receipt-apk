@@ -26,7 +26,12 @@ class ReceiptWidget extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => ReceiptDetailPage(
-              onDeleted: () => onDeleted,
+              index: index,
+              onDeleted: () {
+                Navigator.of(context).pop(context);
+                onDeleted();
+                // Navigator.pop(context);
+              },
               receiptString: receiptString,
             ),
           ),
@@ -51,7 +56,7 @@ class ReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '영수증 ${index}',
+                  '영수증 ${index + 1}',
                   // style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text('${receipt.date}'),
@@ -65,27 +70,58 @@ class ReceiptWidget extends StatelessWidget {
                   '${receipt.storeName}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 18,
                   ),
                 ),
                 Text(
-                  '${receipt.totalPrice}원',
+                  '${receipt.totalPrice}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: 25,
                   ),
                 ),
               ],
             ),
-            // 추가적인 영수증 항목을 원한다면 여기서 표시 가능
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                    size: 20,
+                  ),
                   onPressed: () {
-                    // 삭제 로직
-                    onDeleted();
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("영수증 삭제"),
+                          content: const Text("이 영수증을 삭제하시겠습니까?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text("취소"),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.black,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                onDeleted();
+                                Navigator.of(context).pop(context);
+                              },
+                              child: const Text("삭제"),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
                 ),
               ],

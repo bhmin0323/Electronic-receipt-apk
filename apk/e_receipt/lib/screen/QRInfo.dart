@@ -8,11 +8,13 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:io';
 
 class ReceiptDetailPage extends StatefulWidget {
+  final int index;
   final String receiptString;
   // final Future<ReceiptDataModel> receiptData;
   final VoidCallback onDeleted; // 삭제 콜백 추가
 
   ReceiptDetailPage({
+    required this.index,
     required this.onDeleted,
     required this.receiptString,
     // required this.receiptData,
@@ -72,66 +74,92 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage> {
     }
   }
 
+  String _receiptNum() {
+    if (widget.index == -1) {
+      return '영수증';
+    } else {
+      return '영수증 ${widget.index + 1}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: Text('영수증'),
+        title: Text('${_receiptNum()}'),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: () {
-              widget.onDeleted(); // 삭제 콜백 호출
-              Navigator.pop(context); // 상세 페이지 닫기
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("영수증 삭제"),
+                    content: const Text("이 영수증을 삭제하시겠습니까?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("취소"),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          widget.onDeleted();
+                          Navigator.of(context).pop(context);
+                        },
+                        child: const Text("삭제"),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
             },
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          RepaintBoundary(
-            key: _captureKey, // 캡처할 텍스트만 감싸기
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(35.0, 35.0, 35.0, 1.0),
-              // 왼쪽: 24, 위: 32, 오른쪽: 24, 아래: 8
-              child: Text(
-                receiptString,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'NotoSansKR',
-                  letterSpacing: 0.5,
-                ),
+      body: SingleChildScrollView(
+        child: RepaintBoundary(
+          key: _captureKey,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(35.0, 35.0, 35.0, 35.0),
+            child: Text(
+              widget.receiptString,
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
               ),
             ),
           ),
-          Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0), // 하단 여백
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _captureAndSavePng,
-                    style: ElevatedButton.styleFrom(
-                      primary: Color.fromRGBO(0, 132, 96, 1),
-                      onPrimary: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15.0),
-                      textStyle: TextStyle(fontSize: 18),
-                    ),
-                    child: Text(
-                      '이미지 저장',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                ),
-              ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        color: Colors.white, // 배경색 지정
+        child: ElevatedButton(
+          onPressed: _captureAndSavePng,
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: const Color.fromRGBO(0, 132, 96, 1),
+            textStyle: const TextStyle(fontSize: 18),
+            padding: EdgeInsets.symmetric(
+              vertical: 16,
+              horizontal: screenWidth * 0.1,
             ),
           ),
-        ],
+          child: Text(
+            '이미지 저장',
+            style: TextStyle(fontSize: screenWidth * 0.05),
+          ),
+        ),
       ),
     );
   }
